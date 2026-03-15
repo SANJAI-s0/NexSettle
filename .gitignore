@@ -25,10 +25,7 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 staticfiles/
-media/reports/
-media/claims/
 backend/staticfiles/
-backend/media/
 
 # Environment
 .env
