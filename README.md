@@ -2,33 +2,40 @@
 
 > **Tech Stack:** Django · LangGraph · CrewAI · Gemini 2.5 Flash · Tesseract OCR · MongoDB · Vanilla HTML/CSS/JS
 
-![Django](https://img.shields.io/badge/Django-5.1-092E20?logo=django&logoColor=white)
-![MongoDB](https://img.shields.io/badge/MongoDB-Only-47A248?logo=mongodb&logoColor=white)
-![LangGraph](https://img.shields.io/badge/LangGraph-Orchestration-1F6FEB)
-![CrewAI](https://img.shields.io/badge/CrewAI-Agentic_AI-6A5ACD)
+![Python](https://img.shields.io/badge/Python-3.12.8-3776AB?logo=python&logoColor=white)
+![Django](https://img.shields.io/badge/Django-5.1.4-092E20?logo=django&logoColor=white)
+![DRF](https://img.shields.io/badge/DRF-3.15.2-A30000?logo=django&logoColor=white)
+![MongoDB](https://img.shields.io/badge/MongoDB-nexsettle__db-47A248?logo=mongodb&logoColor=white)
+![LangGraph](https://img.shields.io/badge/LangGraph-Orchestrator-1F6FEB)
+![CrewAI](https://img.shields.io/badge/CrewAI-Agentic-Purple)
 ![Gemini](https://img.shields.io/badge/Gemini-2.5_Flash-4285F4?logo=google&logoColor=white)
-![OCR](https://img.shields.io/badge/OCR-Tesseract-5C3EE8)
-![Frontend](https://img.shields.io/badge/Frontend-HTML%2FCSS%2FJS-E34F26?logo=html5&logoColor=white)
-![CI](https://img.shields.io/badge/CI-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)
-![Deploy](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render&logoColor=000000)
+![OCR](https://img.shields.io/badge/OCR-Tesseract_5-5C3EE8)
+![Frontend](https://img.shields.io/badge/Frontend-Vanilla_JS-F7DF1E?logo=javascript&logoColor=000000)
 ![Docker](https://img.shields.io/badge/Docker-Supported-2496ED?logo=docker&logoColor=white)
+![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render&logoColor=000000)
+![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)
 
 ---
+
 ## Table of Contents
 
-1. [Project Overview](#-project-overview)
-2. [Architecture](#-architecture)
-3. [Prerequisites](#-prerequisites)
-4. [Quick Start (Windows)](#-quick-start-windows)
-5. [Manual Setup](#-manual-setup)
-6. [Docker Setup](#-docker-setup)
-7. [Environment Variables](#-environment-variables)
-8. [API Reference](#-api-reference)
-9. [Frontend Pages](#-frontend-pages)
-10. [MongoDB Collections](#-mongodb-collections)
-11. [AI Pipeline](#-ai-pipeline)
-12. [Credentials (Default)](#-credentials-default)
-13. [Project Structure](#-project-structure)
+1. [Project Overview](#project-overview)
+2. [Architecture](#architecture)
+3. [Prerequisites](#prerequisites)
+4. [Quick Start (Windows)](#quick-start-windows)
+5. [Manual Setup](#manual-setup)
+6. [Docker Setup](#docker-setup)
+7. [Environment Variables](#environment-variables)
+8. [API Reference](#api-reference)
+9. [Frontend Pages](#frontend-pages)
+10. [MongoDB Collections](#mongodb-collections)
+11. [AI Pipeline](#ai-pipeline)
+12. [Credentials (Default)](#credentials-default)
+13. [Project Structure](#project-structure)
+14. [Development Notes](#development-notes)
+15. [CI/CD (GitHub Actions)](#cicd-github-actions)
+16. [Render Deployment](#render-deployment)
+17. [One-command Bootstrap](#one-command-bootstrap)
 
 ---
 
@@ -52,8 +59,78 @@ NexSettle automates the entire insurance claim lifecycle:
 
 ## Architecture
 
+Architecture diagram file:
+[View SVG](docs/architecture.svg)
+
+![NexSettle Architecture](docs/architecture.svg)
+
+### UI Flow
+
+```mermaid
+flowchart TD
+    A[User Opens /] --> B{Role Action}
+    B -->|Register| C[register.html]
+    C --> D[OTP Sent]
+    D --> E[verify-otp.html]
+    E --> F[dashboard.html]
+    B -->|Login| G[login.html]
+    G --> F
+    B -->|Agent Login| H[agent-login.html]
+    H --> I[agent-dashboard.html]
+    B -->|Admin Login| J[admin-login.html]
+    J --> K[admin-dashboard.html]
 ```
 
+### Agent Flow
+
+```mermaid
+flowchart TD
+    A[Claim Files Uploaded] --> B[Agentic Orchestrator]
+    B --> C[DocumentClassifier Agent]
+    C --> D[OCRProcessor Agent]
+    D --> E[DataExtractor Agent]
+    E --> F[FraudDetector Agent]
+    F --> G{Fraud?}
+    G -->|Yes| H[Flag Claim + Write fraud_logs]
+    G -->|No| I[PolicyVerifier Agent]
+    I --> J[ClaimEstimator Agent]
+    J --> K[ReportGenerator Agent]
+    K --> L[MongoDBStorage Agent]
+```
+
+### Backend Flow
+
+```mermaid
+flowchart TD
+    A[Frontend Request] --> B[Django URL Router]
+    B --> C[App View]
+    C --> D{Endpoint Type}
+    D -->|Auth| E[apps/authentication/views.py]
+    D -->|Claim APIs| F[apps/claims/views.py]
+    D -->|Pipeline| G[apps/ai_pipeline/views.py]
+    G --> H[LangGraph or CrewAI Orchestration]
+    H --> I[MongoDB via db/mongo_client.py]
+    H --> J[ReportLab PDF Generation]
+    I --> K[JSON Response]
+    J --> K
+```
+
+### Full Project Flow
+
+```mermaid
+flowchart LR
+    A[User Uploads Claim Documents] --> B[Frontend HTML/CSS/JS]
+    B --> C[Django REST API]
+    C --> D[Document Intake + Validation]
+    D --> E[OCR Engine: Tesseract/pdf2image]
+    E --> F[Classification + Extraction]
+    F --> G[Gemini 2.5 Flash]
+    G --> H[Fraud + Policy Verification]
+    H --> I[Claim Estimation]
+    I --> J[PDF Report Generation]
+    J --> K[MongoDB: nexsettle_db]
+    K --> L[Agent/Admin Review]
+    L --> M[Settlement Decision]
 ```
 
 ---
@@ -280,9 +357,96 @@ Database: **`nexsettle_db`**
 
 ## AI Pipeline
 
+### Execution Modes
+
+| Mode | Config | Description |
+|------|--------|-------------|
+| LangGraph | `AI_ORCHESTRATOR=langgraph` | Graph-based deterministic node execution |
+| CrewAI (Agentic) | `AI_ORCHESTRATOR=crewai` + `USE_CREW_AI=True` | Multi-agent role-based orchestration |
+| Gemini extraction | `USE_GEMINI=True` | LLM-assisted structured extraction |
+| Regex fallback | `USE_GEMINI=False` or API failure | Deterministic extraction fallback |
+
+### End-to-End Pipeline Graph
+
+```mermaid
+flowchart TD
+    A[Upload Documents] --> B[Input Validator]
+    B --> C[Format + Type Gate]
+    C --> D[OCR Processor]
+    D --> E[Document Classifier]
+    E --> F[Data Extractor]
+    F --> G[Identity Normalizer]
+    G --> H[Fraud Detector]
+    H --> I[Policy Verifier]
+    I --> J[Claim Estimator]
+    J --> K[Report Generator]
+    K --> L[Mask Sensitive Fields]
+    L --> M[MongoDB Storage]
+    M --> N[Single Structured JSON Response]
 ```
 
-```
+### Stage Responsibilities
+
+| Stage | What It Does | Key Output |
+|------|---------------|------------|
+| Input Validator | Validates file presence, type, and claim payload | Accepted/rejected upload |
+| Format + Type Gate | Applies strict rules (for example death certificate must be image/PDF) | `invalid_document` when violated |
+| OCR Processor | Runs OCR for images/scanned PDFs, reads text from text/PDF directly when possible | Extracted text + OCR confidence |
+| Document Classifier | Detects document type using keywords/layout hints | `document_type` per file |
+| Data Extractor | Extracts only required fields (no hallucination) | `extracted_data` with null for missing fields |
+| Identity Normalizer | Normalizes Aadhaar/PAN/date formats | Clean identifiers and `YYYY-MM-DD` dates |
+| Fraud Detector | Checks mismatches, invalid IDs, suspicious patterns, date inconsistencies | `fraud_flag` + log signals |
+| Policy Verifier | Matches extracted identities against `policy_holder_data` | Verification result |
+| Claim Estimator | Computes estimated payout using claim type + fraud state | `estimated_claim_amount` |
+| Report Generator | Builds PDF settlement report | Report file path |
+| Mask + Storage | Masks Aadhaar/PAN/account before persistence in MongoDB | Stored safe document |
+
+### Strict Validation and Status Rules
+
+| Condition | Status | Behavior |
+|----------|--------|----------|
+| OCR confidence below threshold (`< 0.6`) | `failed_ocr` | Returns re-upload message for clearer document |
+| Invalid type/format combination | `invalid_document` | File rejected by rule gate |
+| Partial extraction across uploaded docs | `partial` | Returns available fields, missing as `null` |
+| All required processing succeeded | `success` | Full structured JSON response |
+
+### Extraction Rules (Enforced)
+
+1. Missing fields are always returned as `null`.
+2. Aadhaar is extracted by regex and normalized to 12 digits only.
+3. PAN is extracted by regex and normalized to uppercase pattern.
+4. Date fields are normalized to `YYYY-MM-DD`.
+5. Aadhaar/PAN outputs contain only identifier values in extraction payload.
+6. No inferred values are added when source text is absent.
+
+### Fraud Detection Signals
+
+1. Name mismatch across submitted documents.
+2. Invalid Aadhaar format or checksum-like pattern issues.
+3. Invalid PAN format.
+4. Extremely low OCR confidence.
+5. Suspicious formatting or altered-looking text blocks.
+6. Date inconsistencies (death date, registration date, policy timelines).
+
+### Privacy and MongoDB Storage Policy
+
+1. Full identifiers are used only during processing.
+2. Before MongoDB write, sensitive values are masked.
+3. Masking examples:
+   `Aadhaar: 123412341234 -> ********1234`
+   `PAN: ABCDE1234F -> *****1234F`
+   `Bank A/C: 123456789012 -> XXXXXXXX9012`
+4. Stored collections include `claims`, `claim_documents`, and `fraud_logs`.
+
+### Output Contract
+
+The pipeline returns one structured object with:
+
+1. Top-level status and claim id.
+2. Per-document classification + extracted data + confidence.
+3. Global `fraud_flag`.
+4. `overall_confidence`.
+5. Ready-to-store payload for `nexsettle_db`.
 
 ### Supported Document Types
 
@@ -316,7 +480,119 @@ Database: **`nexsettle_db`**
 ## Project Structure
 
 ```
-
+NexSettle_Project/
+|-- .github/
+|   |-- workflows/
+|   |   |-- ci.yml                          # GitHub Actions CI (install, check, smoke tests)
+|   |   `-- deploy-render.yml               # GitHub Actions deploy trigger for Render
+|-- docs/
+|   `-- architecture.svg                    # High-level architecture diagram (linked above)
+|-- backend/
+|   |-- apps/                               # Django app modules (API domains)
+|   |   |-- admins/
+|   |   |   |-- apps.py                     # Django app config for admin module
+|   |   |   |-- urls.py                     # Admin API routes
+|   |   |   `-- views.py                    # Admin auth/dashboard/approval handlers
+|   |   |-- agents/
+|   |   |   |-- apps.py                     # Django app config for agent module
+|   |   |   |-- urls.py                     # Agent API routes
+|   |   |   `-- views.py                    # Agent login/review handlers
+|   |   |-- ai_pipeline/
+|   |   |   |-- apps.py                     # Django app config for AI pipeline
+|   |   |   |-- claim_estimator.py          # Claim amount estimation logic
+|   |   |   |-- crew_pipeline.py            # CrewAI orchestration flow
+|   |   |   |-- data_extractor.py           # Structured field extraction logic
+|   |   |   |-- document_classifier.py      # Document type classifier
+|   |   |   |-- fraud_detector.py           # Fraud signal checks
+|   |   |   |-- pipeline.py                 # LangGraph/LangChain orchestration flow
+|   |   |   |-- policy_verifier.py          # MongoDB policy cross-verification
+|   |   |   |-- urls.py                     # Pipeline API routes
+|   |   |   `-- views.py                    # Upload/process endpoints
+|   |   |-- authentication/
+|   |   |   |-- apps.py                     # Django app config for auth module
+|   |   |   |-- urls.py                     # Register/login/OTP API routes
+|   |   |   `-- views.py                    # Auth and OTP handlers
+|   |   |-- claims/
+|   |   |   |-- apps.py                     # Django app config for claims module
+|   |   |   |-- urls.py                     # Claim listing/detail/status routes
+|   |   |   `-- views.py                    # Claim API logic
+|   |   |-- documents/
+|   |   |   |-- apps.py                     # Django app config for documents module
+|   |   |   |-- urls.py                     # Document endpoints
+|   |   |   `-- views.py                    # Document upload/access handlers
+|   |   |-- fraud_detection/
+|   |   |   |-- apps.py                     # Django app config for fraud module
+|   |   |   |-- urls.py                     # Fraud log/check routes
+|   |   |   `-- views.py                    # Fraud API handlers
+|   |   `-- reports/
+|   |       |-- apps.py                     # Django app config for reports module
+|   |       |-- report_generator.py         # ReportLab PDF generation logic
+|   |       |-- urls.py                     # Report API routes
+|   |       `-- views.py                    # Report download/generate handlers
+|   |-- db/
+|   |   |-- mongo_client.py                 # Central MongoDB client + DB getter
+|   |   `-- __init__.py                     # DB package marker
+|   |-- management/
+|   |   `-- management/
+|   |       `-- commands/                   # Custom Django management commands
+|   |           |-- backfill_user_ids.py    # Backfills missing user_id values
+|   |           |-- bootstrap_project.py    # One-command setup/bootstrap
+|   |           |-- seed_admin.py           # Seeds default admin user
+|   |           |-- seed_policy_holders.py  # Seeds policy holder sample data
+|   |           |-- setup_mongodb.py        # Creates DB collections + indexes
+|   |           `-- smoke_test_flow.py      # End-to-end flow validation command
+|   |-- media/
+|   |   |-- claims/                         # Uploaded claim files (runtime generated)
+|   |   `-- reports/                        # Generated PDF reports
+|   |-- nexsettle/
+|   |   |-- frontend_views.py               # Serves frontend files via Django
+|   |   |-- settings.py                     # Django settings + env configuration
+|   |   |-- urls.py                         # Root URL router
+|   |   |-- wsgi.py                         # WSGI entrypoint
+|   |   `-- __init__.py                     # Project package marker
+|   |-- scripts/
+|   |   `-- seed_admin.py                   # Script-level admin seeding utility
+|   |-- utils/
+|   |   |-- id_generators.py                # Claim/user ID generation helpers
+|   |   |-- jwt_utils.py                    # JWT create/verify helpers
+|   |   |-- masking.py                      # Aadhaar/PAN/account masking utilities
+|   |   |-- ocr.py                          # OCR helper wrappers (Tesseract/PDF)
+|   |   |-- validators.py                   # Validation helpers/regex checks
+|   |   `-- __init__.py                     # Utils package marker
+|   |-- .env                                # Local environment values (never commit real secrets)
+|   |-- .env.example                        # Environment template for setup/deploy
+|   |-- Dockerfile                          # Backend image build instructions
+|   |-- manage.py                           # Django management entrypoint
+|   |-- Procfile                            # Render process command definition
+|   |-- requirements.txt                    # Core Python dependencies
+|   |-- requirements-crewai-tools.txt       # Optional CrewAI tools dependency set
+|   |-- runtime.txt                         # Render Python runtime version
+|   `-- start_render.sh                     # Render startup script (collect/check/run)
+|-- frontend/
+|   |-- index.html                          # Landing page
+|   |-- css/
+|   |   `-- main.css                        # Global frontend styling
+|   |-- js/
+|   |   |-- api.js                          # API client functions (fetch wrappers)
+|   |   `-- ui.js                           # Frontend UI behaviors and interactions
+|   |-- pages/
+|   |   |-- admin-dashboard.html            # Admin dashboard UI
+|   |   |-- admin-login.html                # Admin login page
+|   |   |-- agent-dashboard.html            # Agent dashboard UI
+|   |   |-- agent-login.html                # Agent login page
+|   |   |-- dashboard.html                  # Claimant dashboard page
+|   |   |-- login.html                      # Claimant login page
+|   |   |-- register.html                   # Claimant registration page
+|   |   `-- verify-otp.html                 # OTP verification page
+|   `-- assets/                             # Static assets (images/icons, optional)
+|-- .gitignore                              # Git ignore rules
+|-- docker-compose.yml                      # Local Docker services (backend + MongoDB)
+|-- README.md                               # Project documentation
+|-- render.yaml                             # Render Blueprint configuration
+|-- render_readme.md                        # Detailed Render deployment guide
+|-- run.bat                                 # Windows quick-start runner
+|-- seed_admin.bat                          # Windows helper to seed admin
+`-- structure.txt                           # Generated tree reference file
 ```
 
 ---
@@ -376,32 +652,15 @@ Add this in GitHub repo settings:
 
 ## Render Deployment
 
-Deployment files included:
+Render deployment is fully documented in:
 
-- `render.yaml` (Render Blueprint)
-- `backend/start_render.sh` (startup script)
-- `backend/Procfile`
-- `backend/runtime.txt`
-- `backend/.env.example`
+- [Render Deployment Guide](render_readme.md)
 
-### Deploy Steps
+Quick note:
 
-1. Push this repository to GitHub.
-2. In Render, create a new **Blueprint** from the repo.
-3. Render will detect `render.yaml` and create the web service.
-4. Set required env vars in Render dashboard:
-   - `MONGO_URI` (MongoDB Atlas/local tunnel URI)
-   - `GEMINI_API_KEY`
-   - `EMAIL_HOST_USER` and `EMAIL_HOST_PASSWORD` (if email OTP is needed)
-5. Deploy.
-
-Health check endpoint:
-
-- `/api/health/`
-
-App endpoint:
-
-- `/` (frontend served by Django)
+- Deployment method: Render Blueprint via `render.yaml`
+- Health check: `/api/health/`
+- App root: `/`
 
 ---
 
