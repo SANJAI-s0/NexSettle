@@ -14,6 +14,7 @@
 ![Docker](https://img.shields.io/badge/Docker-Supported-2496ED?logo=docker&logoColor=white)
 ![Render](https://img.shields.io/badge/Deploy-Render-46E3B7?logo=render&logoColor=000000)
 ![CI/CD](https://img.shields.io/badge/CI%2FCD-GitHub_Actions-2088FF?logo=githubactions&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ---
 
@@ -21,21 +22,22 @@
 
 1. [Project Overview](#project-overview)
 2. [Architecture](#architecture)
-3. [Prerequisites](#prerequisites)
-4. [Quick Start (Windows)](#quick-start-windows)
-5. [Manual Setup](#manual-setup)
-6. [Docker Setup](#docker-setup)
-7. [Environment Variables](#environment-variables)
-8. [API Reference](#api-reference)
-9. [Frontend Pages](#frontend-pages)
-10. [MongoDB Collections](#mongodb-collections)
-11. [AI Pipeline](#ai-pipeline)
-12. [Credentials (Default)](#credentials-default)
-13. [Project Structure](#project-structure)
-14. [Development Notes](#development-notes)
-15. [CI/CD (GitHub Actions)](#cicd-github-actions)
-16. [Render Deployment](#render-deployment)
-17. [One-command Bootstrap](#one-command-bootstrap)
+3. [Project Structure](#project-structure)
+4. [Prerequisites](#prerequisites)
+5. [Environment Variables](#environment-variables)
+6. [Quick Start (Windows)](#quick-start-windows)
+7. [Manual Setup](#manual-setup)
+8. [Docker Setup](#docker-setup)
+9. [One-command Bootstrap](#one-command-bootstrap)
+10. [API Reference](#api-reference)
+11. [Frontend Pages](#frontend-pages)
+12. [MongoDB Collections](#mongodb-collections)
+13. [AI Pipeline](#ai-pipeline)
+14. [Credentials (Default)](#credentials-default)
+15. [Development Notes](#development-notes)
+16. [CI/CD (GitHub Actions)](#cicd-github-actions)
+17. [Render Deployment](#render-deployment)
+18. [License](#license)
 
 ---
 
@@ -135,6 +137,126 @@ flowchart LR
 
 ---
 
+## Project Structure
+
+```
+NexSettle_Project/
+|-- .github/
+|   |-- workflows/
+|   |   |-- ci.yml                          # GitHub Actions CI (install, check, smoke tests)
+|   |   `-- deploy-render.yml               # GitHub Actions deploy trigger for Render
+|-- docs/
+|   `-- architecture.svg                    # High-level architecture diagram (linked above)
+|-- backend/
+|   |-- apps/                               # Django app modules (API domains)
+|   |   |-- admins/
+|   |   |   |-- apps.py                     # Django app config for admin module
+|   |   |   |-- urls.py                     # Admin API routes
+|   |   |   `-- views.py                    # Admin auth/dashboard/approval handlers
+|   |   |-- agents/
+|   |   |   |-- apps.py                     # Django app config for agent module
+|   |   |   |-- urls.py                     # Agent API routes
+|   |   |   `-- views.py                    # Agent login/review handlers
+|   |   |-- ai_pipeline/
+|   |   |   |-- apps.py                     # Django app config for AI pipeline
+|   |   |   |-- claim_estimator.py          # Claim amount estimation logic
+|   |   |   |-- crew_pipeline.py            # CrewAI orchestration flow
+|   |   |   |-- data_extractor.py           # Structured field extraction logic
+|   |   |   |-- document_classifier.py      # Document type classifier
+|   |   |   |-- fraud_detector.py           # Fraud signal checks
+|   |   |   |-- pipeline.py                 # LangGraph/LangChain orchestration flow
+|   |   |   |-- policy_verifier.py          # MongoDB policy cross-verification
+|   |   |   |-- urls.py                     # Pipeline API routes
+|   |   |   `-- views.py                    # Upload/process endpoints
+|   |   |-- authentication/
+|   |   |   |-- apps.py                     # Django app config for auth module
+|   |   |   |-- urls.py                     # Register/login/OTP API routes
+|   |   |   `-- views.py                    # Auth and OTP handlers
+|   |   |-- claims/
+|   |   |   |-- apps.py                     # Django app config for claims module
+|   |   |   |-- urls.py                     # Claim listing/detail/status routes
+|   |   |   `-- views.py                    # Claim API logic
+|   |   |-- documents/
+|   |   |   |-- apps.py                     # Django app config for documents module
+|   |   |   |-- urls.py                     # Document endpoints
+|   |   |   `-- views.py                    # Document upload/access handlers
+|   |   |-- fraud_detection/
+|   |   |   |-- apps.py                     # Django app config for fraud module
+|   |   |   |-- urls.py                     # Fraud log/check routes
+|   |   |   `-- views.py                    # Fraud API handlers
+|   |   `-- reports/
+|   |       |-- apps.py                     # Django app config for reports module
+|   |       |-- report_generator.py         # ReportLab PDF generation logic
+|   |       |-- urls.py                     # Report API routes
+|   |       `-- views.py                    # Report download/generate handlers
+|   |-- db/
+|   |   |-- mongo_client.py                 # Central MongoDB client + DB getter
+|   |   `-- __init__.py                     # DB package marker
+|   |-- management/
+|   |   `-- management/
+|   |       `-- commands/                   # Custom Django management commands
+|   |           |-- backfill_user_ids.py    # Backfills missing user_id values
+|   |           |-- bootstrap_project.py    # One-command setup/bootstrap
+|   |           |-- seed_admin.py           # Seeds default admin user
+|   |           |-- seed_policy_holders.py  # Seeds policy holder sample data
+|   |           |-- setup_mongodb.py        # Creates DB collections + indexes
+|   |           `-- smoke_test_flow.py      # End-to-end flow validation command
+|   |-- media/
+|   |   |-- claims/                         # Uploaded claim files (runtime generated)
+|   |   `-- reports/                        # Generated PDF reports
+|   |-- nexsettle/
+|   |   |-- frontend_views.py               # Serves frontend files via Django
+|   |   |-- settings.py                     # Django settings + env configuration
+|   |   |-- urls.py                         # Root URL router
+|   |   |-- wsgi.py                         # WSGI entrypoint
+|   |   `-- __init__.py                     # Project package marker
+|   |-- scripts/
+|   |   `-- seed_admin.py                   # Script-level admin seeding utility
+|   |-- utils/
+|   |   |-- id_generators.py                # Claim/user ID generation helpers
+|   |   |-- jwt_utils.py                    # JWT create/verify helpers
+|   |   |-- masking.py                      # Aadhaar/PAN/account masking utilities
+|   |   |-- ocr.py                          # OCR helper wrappers (Tesseract/PDF)
+|   |   |-- validators.py                   # Validation helpers/regex checks
+|   |   `-- __init__.py                     # Utils package marker
+|   |-- .env                                # Local environment values (never commit real secrets)
+|   |-- .env.example                        # Environment template for setup/deploy
+|   |-- Dockerfile                          # Backend image build instructions
+|   |-- manage.py                           # Django management entrypoint
+|   |-- Procfile                            # Render process command definition
+|   |-- requirements.txt                    # Core Python dependencies
+|   |-- requirements-crewai-tools.txt       # Optional CrewAI tools dependency set
+|   |-- runtime.txt                         # Render Python runtime version
+|   `-- start_render.sh                     # Render startup script (collect/check/run)
+|-- frontend/
+|   |-- index.html                          # Landing page
+|   |-- css/
+|   |   `-- main.css                        # Global frontend styling
+|   |-- js/
+|   |   |-- api.js                          # API client functions (fetch wrappers)
+|   |   `-- ui.js                           # Frontend UI behaviors and interactions
+|   |-- pages/
+|   |   |-- admin-dashboard.html            # Admin dashboard UI
+|   |   |-- admin-login.html                # Admin login page
+|   |   |-- agent-dashboard.html            # Agent dashboard UI
+|   |   |-- agent-login.html                # Agent login page
+|   |   |-- dashboard.html                  # Claimant dashboard page
+|   |   |-- login.html                      # Claimant login page
+|   |   |-- register.html                   # Claimant registration page
+|   |   `-- verify-otp.html                 # OTP verification page
+|   `-- assets/                             # Static assets (images/icons, optional)
+|-- .gitignore                              # Git ignore rules
+|-- docker-compose.yml                      # Local Docker services (backend + MongoDB)
+|-- README.md                               # Project documentation
+|-- render.yaml                             # Render Blueprint configuration
+|-- render_readme.md                        # Detailed Render deployment guide
+|-- run.bat                                 # Windows quick-start runner
+|-- seed_admin.bat                          # Windows helper to seed admin
+`-- structure.txt                           # Generated tree reference file
+```
+
+---
+
 ## Prerequisites
 
 | Requirement | Version | Download |
@@ -150,6 +272,25 @@ flowchart LR
 > This path is already pre-configured in `backend\.env`.
 
 > **Windows Poppler:** After downloading, add the `bin/` folder to your system PATH so `pdf2image` can find `pdftoppm`.
+
+---
+
+## Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `SECRET_KEY` | (dev key) | Django secret key |
+| `DEBUG` | `True` | Django debug mode |
+| `MONGO_URI` | `mongodb://localhost:27017/` | MongoDB connection string |
+| `MONGO_DB_NAME` | `nexsettle_db` | Database name |
+| `JWT_SECRET` | (dev key) | JWT signing secret |
+| `GEMINI_API_KEY` | `""` | Google Gemini API key *(required for AI extraction)* |
+| `EMAIL_HOST` | `smtp.gmail.com` | SMTP server |
+| `EMAIL_HOST_USER` | `""` | Gmail address for OTP emails |
+| `EMAIL_HOST_PASSWORD` | `""` | Gmail App Password |
+| `TESSERACT_CMD` | `C:\Program Files\Tesseract-OCR\tesseract.exe` | Tesseract path (Windows) |
+
+> Get a Gemini API key at: https://aistudio.google.com/app/apikey
 
 ---
 
@@ -244,22 +385,15 @@ Services:
 
 ---
 
-## Environment Variables
+## One-command Bootstrap
 
-| Variable | Default | Description |
-|----------|---------|-------------|
-| `SECRET_KEY` | (dev key) | Django secret key |
-| `DEBUG` | `True` | Django debug mode |
-| `MONGO_URI` | `mongodb://localhost:27017/` | MongoDB connection string |
-| `MONGO_DB_NAME` | `nexsettle_db` | Database name |
-| `JWT_SECRET` | (dev key) | JWT signing secret |
-| `GEMINI_API_KEY` | `""` | Google Gemini API key *(required for AI extraction)* |
-| `EMAIL_HOST` | `smtp.gmail.com` | SMTP server |
-| `EMAIL_HOST_USER` | `""` | Gmail address for OTP emails |
-| `EMAIL_HOST_PASSWORD` | `""` | Gmail App Password |
-| `TESSERACT_CMD` | `C:\Program Files\Tesseract-OCR\tesseract.exe` | Tesseract path (Windows) |
+For local/project initialization:
 
-> Get a Gemini API key at: https://aistudio.google.com/app/apikey
+```powershell
+cd backend
+python manage.py bootstrap_project
+python manage.py runserver
+```
 
 ---
 
@@ -477,126 +611,6 @@ The pipeline returns one structured object with:
 
 ---
 
-## Project Structure
-
-```
-NexSettle_Project/
-|-- .github/
-|   |-- workflows/
-|   |   |-- ci.yml                          # GitHub Actions CI (install, check, smoke tests)
-|   |   `-- deploy-render.yml               # GitHub Actions deploy trigger for Render
-|-- docs/
-|   `-- architecture.svg                    # High-level architecture diagram (linked above)
-|-- backend/
-|   |-- apps/                               # Django app modules (API domains)
-|   |   |-- admins/
-|   |   |   |-- apps.py                     # Django app config for admin module
-|   |   |   |-- urls.py                     # Admin API routes
-|   |   |   `-- views.py                    # Admin auth/dashboard/approval handlers
-|   |   |-- agents/
-|   |   |   |-- apps.py                     # Django app config for agent module
-|   |   |   |-- urls.py                     # Agent API routes
-|   |   |   `-- views.py                    # Agent login/review handlers
-|   |   |-- ai_pipeline/
-|   |   |   |-- apps.py                     # Django app config for AI pipeline
-|   |   |   |-- claim_estimator.py          # Claim amount estimation logic
-|   |   |   |-- crew_pipeline.py            # CrewAI orchestration flow
-|   |   |   |-- data_extractor.py           # Structured field extraction logic
-|   |   |   |-- document_classifier.py      # Document type classifier
-|   |   |   |-- fraud_detector.py           # Fraud signal checks
-|   |   |   |-- pipeline.py                 # LangGraph/LangChain orchestration flow
-|   |   |   |-- policy_verifier.py          # MongoDB policy cross-verification
-|   |   |   |-- urls.py                     # Pipeline API routes
-|   |   |   `-- views.py                    # Upload/process endpoints
-|   |   |-- authentication/
-|   |   |   |-- apps.py                     # Django app config for auth module
-|   |   |   |-- urls.py                     # Register/login/OTP API routes
-|   |   |   `-- views.py                    # Auth and OTP handlers
-|   |   |-- claims/
-|   |   |   |-- apps.py                     # Django app config for claims module
-|   |   |   |-- urls.py                     # Claim listing/detail/status routes
-|   |   |   `-- views.py                    # Claim API logic
-|   |   |-- documents/
-|   |   |   |-- apps.py                     # Django app config for documents module
-|   |   |   |-- urls.py                     # Document endpoints
-|   |   |   `-- views.py                    # Document upload/access handlers
-|   |   |-- fraud_detection/
-|   |   |   |-- apps.py                     # Django app config for fraud module
-|   |   |   |-- urls.py                     # Fraud log/check routes
-|   |   |   `-- views.py                    # Fraud API handlers
-|   |   `-- reports/
-|   |       |-- apps.py                     # Django app config for reports module
-|   |       |-- report_generator.py         # ReportLab PDF generation logic
-|   |       |-- urls.py                     # Report API routes
-|   |       `-- views.py                    # Report download/generate handlers
-|   |-- db/
-|   |   |-- mongo_client.py                 # Central MongoDB client + DB getter
-|   |   `-- __init__.py                     # DB package marker
-|   |-- management/
-|   |   `-- management/
-|   |       `-- commands/                   # Custom Django management commands
-|   |           |-- backfill_user_ids.py    # Backfills missing user_id values
-|   |           |-- bootstrap_project.py    # One-command setup/bootstrap
-|   |           |-- seed_admin.py           # Seeds default admin user
-|   |           |-- seed_policy_holders.py  # Seeds policy holder sample data
-|   |           |-- setup_mongodb.py        # Creates DB collections + indexes
-|   |           `-- smoke_test_flow.py      # End-to-end flow validation command
-|   |-- media/
-|   |   |-- claims/                         # Uploaded claim files (runtime generated)
-|   |   `-- reports/                        # Generated PDF reports
-|   |-- nexsettle/
-|   |   |-- frontend_views.py               # Serves frontend files via Django
-|   |   |-- settings.py                     # Django settings + env configuration
-|   |   |-- urls.py                         # Root URL router
-|   |   |-- wsgi.py                         # WSGI entrypoint
-|   |   `-- __init__.py                     # Project package marker
-|   |-- scripts/
-|   |   `-- seed_admin.py                   # Script-level admin seeding utility
-|   |-- utils/
-|   |   |-- id_generators.py                # Claim/user ID generation helpers
-|   |   |-- jwt_utils.py                    # JWT create/verify helpers
-|   |   |-- masking.py                      # Aadhaar/PAN/account masking utilities
-|   |   |-- ocr.py                          # OCR helper wrappers (Tesseract/PDF)
-|   |   |-- validators.py                   # Validation helpers/regex checks
-|   |   `-- __init__.py                     # Utils package marker
-|   |-- .env                                # Local environment values (never commit real secrets)
-|   |-- .env.example                        # Environment template for setup/deploy
-|   |-- Dockerfile                          # Backend image build instructions
-|   |-- manage.py                           # Django management entrypoint
-|   |-- Procfile                            # Render process command definition
-|   |-- requirements.txt                    # Core Python dependencies
-|   |-- requirements-crewai-tools.txt       # Optional CrewAI tools dependency set
-|   |-- runtime.txt                         # Render Python runtime version
-|   `-- start_render.sh                     # Render startup script (collect/check/run)
-|-- frontend/
-|   |-- index.html                          # Landing page
-|   |-- css/
-|   |   `-- main.css                        # Global frontend styling
-|   |-- js/
-|   |   |-- api.js                          # API client functions (fetch wrappers)
-|   |   `-- ui.js                           # Frontend UI behaviors and interactions
-|   |-- pages/
-|   |   |-- admin-dashboard.html            # Admin dashboard UI
-|   |   |-- admin-login.html                # Admin login page
-|   |   |-- agent-dashboard.html            # Agent dashboard UI
-|   |   |-- agent-login.html                # Agent login page
-|   |   |-- dashboard.html                  # Claimant dashboard page
-|   |   |-- login.html                      # Claimant login page
-|   |   |-- register.html                   # Claimant registration page
-|   |   `-- verify-otp.html                 # OTP verification page
-|   `-- assets/                             # Static assets (images/icons, optional)
-|-- .gitignore                              # Git ignore rules
-|-- docker-compose.yml                      # Local Docker services (backend + MongoDB)
-|-- README.md                               # Project documentation
-|-- render.yaml                             # Render Blueprint configuration
-|-- render_readme.md                        # Detailed Render deployment guide
-|-- run.bat                                 # Windows quick-start runner
-|-- seed_admin.bat                          # Windows helper to seed admin
-`-- structure.txt                           # Generated tree reference file
-```
-
----
-
 ## Development Notes
 
 ### CORS & CSRF
@@ -664,14 +678,12 @@ Quick note:
 
 ---
 
-## One-command Bootstrap
+## License
 
-For local/project initialization:
+This project is licensed under the MIT License.
 
-```powershell
-cd backend
-python manage.py bootstrap_project
-python manage.py runserver
-```
+- [View License](LICENSE)
 
 ---
+`r`n
+
