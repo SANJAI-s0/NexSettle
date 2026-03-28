@@ -29,6 +29,8 @@ pdf2image==1.17.0
 
 # PDF Generation
 reportlab==4.2.5
+# requests warns if chardet>=6 is installed; reportlab depends on chardet.
+chardet<6
 PyPDF2==3.0.1
 
 # Utilities

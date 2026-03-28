@@ -298,7 +298,7 @@ NexSettle_Project/
 
 ```batch
 # 1. Clone the repo
-git clone <repo-url>
+git clone https://github.com/SANJAI-s0/NexSettle.git
 cd NexSettle_Project
 
 # 2. Start MongoDB (if not running as a service)
